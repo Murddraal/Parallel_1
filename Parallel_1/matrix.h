@@ -8,13 +8,19 @@
 #include <stdlib.h>
 #include <sstream>
 #include <string>
-
+// говнокод: 
+// структура данных, в которую различные потоки могут складывать информацию
+// без использования start всё сломается
 class buff
 {
 private:
 	std::mutex buff_mutex;
 public:
-	buff(int n) : data(new double[n*n]) {}
+	buff(int n) : data(new double[n*n])
+	{
+		for (int i = 0; i < n*n; ++i)
+			data[i] = 0;
+	}
 	buff() = delete;
 	double * const data;
 	void start()
@@ -52,9 +58,9 @@ void write_matrix(int size)
 	{
 		for (int j = 0; j < size; ++j)
 		{
-			fout_a << rand() % 10 + 1 << " ";
+			fout_a << 2 << " ";//rand() % 10 + 1 << " ";
 			if (i == j)
-				fout_b << 2 << " ";
+				fout_b << 1 << " ";
 			else
 				fout_b << 0 << " ";
 		}
