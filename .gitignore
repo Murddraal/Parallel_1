@@ -301,3 +301,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+*.vcxproj
+Parallel_1/Parallel_1.vcxproj.filters
+Parallel_1/matr_b.txt
+Parallel_1/matr_a.txt
+Parallel_1.sln
