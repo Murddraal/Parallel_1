@@ -6,7 +6,7 @@ const std::string MATR_B_NAME = "matr_b.txt";
 const std::string RESULT_MATR_NAME = "result_matr.txt";
 const int MATR_SIZE = 200;
 const int NUM_THREADS = 1;
-const int NUM_BLOCKS = 1;
+const int NUM_BLOCKS = 5;
 
 // уможает две матрицы квадратные матрицы и помещает результат в new_b
 void multiply_thread(const double *const, const double *const matr_b, const int &, buff * const);

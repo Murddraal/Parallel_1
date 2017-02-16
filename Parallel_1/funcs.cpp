@@ -21,7 +21,7 @@ void multiply_thread(const double *const matr_a, const double *const matr_b, con
 void printing_params_and_time(const int& size, const int& blocks, const int& threads, const double& time)
 {
 	std::cout << "Size of matrix: " << size << 'x' << size << "\n";
-	std::cout << "Number of blocks: " << blocks * blocks << "\n";
+	std::cout << "Number of blocks: " << blocks << 'x' << blocks << "\n";
 	std::cout << "Number of threads: " << threads << "\n";
 	std::cout << "Time: " << time << "\n";
 }
@@ -60,12 +60,14 @@ double* multiplying_matr(const int matr_size, const int num_blocks, const int nu
 
 	const int block_width = int(matr_size / num_blocks);
 
+	std::vector<std::vector<buff *>> buffers;
+	buffers.resize(num_blocks);
 	// шаг цикла - ширина блока.
-	for (int i = 0; i < matr_size; i += block_width)
+	for (int i = 0, ib = 0; i < matr_size; i += block_width, ++ib)
 	{
-		for (int j = 0; j < matr_size; j += block_width)
+		for (int j = 0, jb = 0; j < matr_size; j += block_width, ++jb)
 		{
-			buff * const b_buff = new buff(block_width);
+			buffers[ib].push_back(new buff(block_width));
 
 			for (int k = 0; k < matr_size; k += block_width)
 			{
@@ -74,28 +76,31 @@ double* multiplying_matr(const int matr_size, const int num_blocks, const int nu
 				// если кол-во текущих потоков меньше максимального, то добавляем в вектор ещё один
 				// иначе, ждём завершения всех потоков, очищаем вектор и заполняем его заново 
 				if (num_threads > matr_threads.size())
-					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, b_buff));
+					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, buffers[ib][jb]));
 				else
 				{
 					killing_threads(matr_threads);
-					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, b_buff));
+					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, buffers[ib][jb]));
 				}
 			}
+		}
+	}
 
-			killing_threads(matr_threads);
-			// запись вычисленного блока из буфера
-			// в нужное место результирующей матрицы
+	killing_threads(matr_threads);
+	// запись вычисленного блока из буфера
+	// в нужное место результирующей матрицы
+	for (int i = 0, ib = 0; i <matr_size; i += block_width, ++ib)
+		for (int j = 0, jb = 0; j < matr_size; j += block_width, ++jb)
+		{
 			for (int ii = i; ii < i + block_width; ++ii)
 			{
 				for (int jj = j, b = ii*matr_size; jj < j + block_width; ++jj)
 				{
-					result_matr[b + jj] = b_buff->data[(ii - i) * block_width + (jj - j)];
+					result_matr[b + jj] = buffers[ib][jb]->data[(ii - i) * block_width + (jj - j)];
 				}
 			}
-
-			delete b_buff;
 		}
-	}
+	
 
 	return result_matr;
 }
