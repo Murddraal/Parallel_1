@@ -1,4 +1,5 @@
 #pragma once
+#include <ctime>
 #include <vector>
 #include <iostream>
 #include <thread>
@@ -21,8 +22,11 @@ public:
 		for (int i = 0; i < n*n; ++i)
 			data[i] = 0;
 	}
+
 	buff() = delete;
+
 	double * const data;
+
 	void start()
 	{
 		std::lock_guard<std::mutex> l(buff_mutex);
@@ -58,9 +62,9 @@ void write_matrix(int size)
 	{
 		for (int j = 0; j < size; ++j)
 		{
-			fout_a << 2 << " ";//rand() % 10 + 1 << " ";
+			fout_a << 3 << " ";//rand() % 10 + 1 << " ";
 			if (i == j)
-				fout_b << 1 << " ";
+				fout_b << 3 << " ";
 			else
 				fout_b << 0 << " ";
 		}
