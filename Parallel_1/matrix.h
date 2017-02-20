@@ -14,12 +14,13 @@
 class buff
 {
 private:
-	std::mutex buff_mutex;
+	
 public:
-
+	std::mutex buff_mutex;
 	double * const data;
 
 	buff(int);
+	~buff();
 
 	buff() = delete;
 	// ¬ключение мьютекса

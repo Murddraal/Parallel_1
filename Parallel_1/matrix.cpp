@@ -51,3 +51,8 @@ buff::buff(int n) : data(new double[n*n])
 	for (int i = 0; i < n*n; ++i)
 		data[i] = 0;
 }
+
+buff::~buff()
+{
+	delete[] data;
+}

@@ -33,12 +33,37 @@ void main(int argc, char **argv)
 	// Вычисляем затраченное время
 	double time = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
+	int * const test_matr = new int[matr_size*matr_size];
+	for (int i = 0; i < matr_size*matr_size; ++i)
+		test_matr[i] = 0;
+
+	for (int i = 0; i < matr_size; ++i)
+	{
+		for (int j = 0; j < matr_size; ++j)
+		{
+			for (int k = 0, el = i*matr_size + j; k < matr_size; ++k)
+			{
+				int x = matr_a[i*matr_size + k] * matr_b[k*matr_size + j];
+				test_matr[el] += x;
+			}
+		}
+	}
+
+	int summ = 0;
+	for (int i = 0; i < matr_size * matr_size; ++i)
+	{
+		summ += test_matr[i] - result_matr[i];
+	}
+
+	std::cout << summ << '\n';
+
 	// Выводим время и параметры программы на экран
 	printing_params_and_time(matr_size, num_blocks, num_threads, time);
 
 	// Запись результирующей матрицы в файл
 	writing_result_matrix(RESULT_MATR_NAME, matr_size, result_matr);
 
+	delete[] test_matr;
 	
 }
 
