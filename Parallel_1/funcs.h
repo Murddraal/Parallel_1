@@ -9,13 +9,13 @@ const int NUM_THREADS = 1;
 const int NUM_BLOCKS = 5;
 
 // уможает две матрицы квадратные матрицы и помещает результат в new_b
-void multiply_thread(const double *const, const double *const matr_b, const int &, const int &, buff * const);
+void multiply_thread(cpc_elm, cpc_elm, const int &, const int &, buff * const, int, int);
 
 void printing_params_and_time(const int&, const int&, const int&, const double&);
 
-void writing_result_matrix(const std::string &, int, double * const);
+void writing_result_matrix(const std::string &, const int&, cpc_elm);
 
 void killing_threads(std::vector<std::thread*> &);
 
-double* multiplying_matr(const int, const int, const int,
-	const double * const, const double * const);
+void multiplying_matr(const int&, const int&, const int&,
+	cpc_elm, cpc_elm, buff * const);

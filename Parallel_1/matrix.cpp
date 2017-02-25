@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-const double* reading_matrix(const std::string &filename)
+elm* reading_matrix(const std::string &filename)
 {
 	std::ifstream fin(filename);
 
@@ -8,7 +8,7 @@ const double* reading_matrix(const std::string &filename)
 	std::getline(fin, buf);
 	int size = std::stoi(buf);
 
-	double *matrix = new double[size * size];
+	elm *matrix = new elm[size * size];
 	int i = 0;
 	while (fin >> matrix[i++])
 		true;
@@ -41,12 +41,7 @@ void write_matrix(int size)
 
 }
 
-void buff::start()
-{
-	std::lock_guard<std::mutex> l(buff_mutex);
-}
-
-buff::buff(int n) : data(new double[n*n])
+buff::buff(int n) : data(new elm[n*n])
 {
 	for (int i = 0; i < n*n; ++i)
 		data[i] = 0;
