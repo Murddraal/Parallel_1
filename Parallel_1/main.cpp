@@ -1,7 +1,8 @@
 #include "matrix.h"
 #include "funcs.h"
 
-pc_elm siply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
+//умножение двух матриц влоб
+pc_elm simply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
 {
 	pc_elm test_matr = new elm[matr_size*matr_size];
 	for (size_t i = 0; i < matr_size*matr_size; ++i)
@@ -20,6 +21,7 @@ pc_elm siply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
 	return test_matr;
 }
 
+// тестирвоание матриц на идентичность
 elm test(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
 {
 	elm summ = 0;
@@ -57,7 +59,7 @@ void main(int argc, char **argv)
 	std::clock_t start = std::clock();
 
 	// Умножаем матрицы
-	buff *result_matr = new buff(matr_size);
+	auto result_matr = new mut_matr(matr_size);
 	multiplying_matr(matr_size, num_blocks, num_threads, matr_a, matr_b, result_matr);
 
 	// Вычисляем затраченное время
@@ -70,11 +72,11 @@ void main(int argc, char **argv)
 	writing_result_matrix(RESULT_MATR_NAME, matr_size, result_matr->data);
 
 	// Тестирование умножения
-	pc_elm test_matr = siply_mupliply(matr_a, matr_b, matr_size);
+	pc_elm test_matr = simply_mupliply(matr_a, matr_b, matr_size);
 
-	elm summ = test(test_matr, result_matr->data, matr_size);
+	auto summ = test(test_matr, result_matr->data, matr_size);
 
-	std::cout << summ << '\n';
+	std::cout << "Test: " << summ << '\n';
 
 
 	delete[] test_matr;

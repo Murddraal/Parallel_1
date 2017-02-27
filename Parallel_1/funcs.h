@@ -8,14 +8,15 @@ const size_t MATR_SIZE = 200;
 const size_t NUM_THREADS = 1;
 const size_t NUM_BLOCKS = 5;
 
-// уможает две матрицы квадратные матрицы и помещает результат в new_b
+// уможает два блока матриц
 void multiply_thread(thread_pool*);
 
+// выводит в консоль параметры, с которой была запущено программа, и время её выполненя
 void printing_params_and_time(const size_t&, const size_t&, const size_t&, const double&);
 
+// записывает результирующую матрицу в файл
 void writing_result_matrix(const std::string &, const size_t&, cpc_elm);
 
-void killing_threads(std::vector<std::thread*> &);
-
+// умножение матриц с делением на блоки и потоки
 void multiplying_matr(const size_t&, const size_t&, const size_t&,
-	cpc_elm, cpc_elm, buff * const);
+	cpc_elm, cpc_elm, mut_matr * const);

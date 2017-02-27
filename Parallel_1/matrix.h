@@ -17,40 +17,48 @@ typedef const elm * const cpc_elm;
 typedef elm * const pc_elm;
 
 // структура данных, в которую различные потоки могут складывать информацию
-class buff
+class mut_matr
 {
 private:
 	
 public:
-	std::mutex buff_mutex;
+	std::mutex mtx;
 	pc_elm data;
 
-	buff(size_t);
-	~buff();
+	mut_matr(size_t);
+	~mut_matr();
 
-	buff() = delete;	
+	mut_matr() = delete;	
 };
 
+// содержит данные, необходимые для умножения двух квадратных матриц между собой
 struct th_data
 {
+	// указатели на начало блоков в матрицах а/б
 	cpc_elm matr_a;
 	cpc_elm matr_b;
+	//размер блока и матрицы
 	const size_t n;
 	const size_t matr_size;
-	buff * const result;
+	// структура, куда записывается результат умножения
+	mut_matr * const result;
+	// индексы текущего блока результирующей матрицы
 	const size_t ri;
 	const size_t rj;
 
 	th_data(cpc_elm matr_a,	cpc_elm matr_b,
 		const size_t n,	const size_t matr_size,
-		buff * const result, const size_t ri, const size_t rj);
+		mut_matr * const result, const size_t ri, const size_t rj);
 	th_data();
 };
 
+// пул потоков
 class thread_pool
 {
 private:
+	// очередь с данными, которые считывают потоки для умножения матриц(указатели на начала блоков и их размеры)
 	std::queue<th_data*> data_queue;
+	// вектор потоков
 	std::vector<std::thread*> multiply;
 
 public:
@@ -60,10 +68,13 @@ public:
 	thread_pool(size_t);
 	thread_pool() = delete;
 	void killing_threads();
+
 	std::mutex tp_mutex;
 
 };
 
+// чтение матрицы из файла
 elm* reading_matrix(const std::string &);
 
+// запись матрицы в файл
 void write_matrix(size_t);

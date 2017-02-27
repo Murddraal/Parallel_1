@@ -2,52 +2,47 @@
 
 void multiply_thread(thread_pool* tp)
 {
-	size_t t_time = 0;
+	//ожидание необходимо для того, чтобы поток не зовершился до начала подачи данных в очередь
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
 	while (true)
 	{
 		bool is_empty = false;
 		auto data = new th_data();
+		//проверка очереди на пустоту и взятие данных
 		{
 			std::lock_guard<std::mutex> lg(tp->tp_mutex);
+
 			is_empty = tp->is_empty();
-			if (!is_empty)
+			if (is_empty)
+				return;
+			else
 				data = tp->pop();
 		}
-		
-		
-		if (is_empty)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			t_time += 10;
-		}
-		else
-		{
-			t_time = 0;
 
-			elm* b = new elm[(*data).n*(*data).n];
-			for (size_t i = 0; i < (*data).n*(*data).n; ++i)
-				b[i] = 0;
+		// умножение блоков
+		auto b = new elm[(*data).n*(*data).n];
+		for (size_t i = 0; i < (*data).n*(*data).n; ++i)
+			b[i] = 0;
 
-			for (size_t i = 0; i < (*data).n; ++i)
+		for (size_t i = 0; i < (*data).n; ++i)
+		{
+			for (size_t j = 0; j < (*data).n; ++j)
 			{
-				for (size_t j = 0; j < (*data).n; ++j)
+				for (size_t k = 0, el = i*(*data).n + j; k < (*data).n; ++k)
 				{
-					for (size_t k = 0, el = i*(*data).n + j; k < (*data).n; ++k)
-					{
-						b[el] += (*data).matr_a[i*(*data).matr_size + k] * (*data).matr_b[k*(*data).matr_size + j];
-					}
+					b[el] += (*data).matr_a[i*(*data).matr_size + k] * (*data).matr_b[k*(*data).matr_size + j];
 				}
 			}
-			// блокирование мьютекса
-			std::lock_guard<std::mutex> l((*data).result->buff_mutex);
-			for (size_t i = 0, ii = (*data).ri; i < (*data).n; ++i, ++ii)
-				for (size_t j = 0, jj = (*data).rj; j < (*data).n; ++j, ++jj)
-					(*data).result->data[ii*(*data).matr_size + jj] += b[i*(*data).n + j];
-			delete[] b;
 		}
-		
-		if (t_time == 100)
-			return;
+
+		// блокирование результирующей матрицы
+		std::lock_guard<std::mutex> l((*data).result->mtx);
+		for (size_t i = 0, ii = (*data).ri; i < (*data).n; ++i, ++ii)
+			for (size_t j = 0, jj = (*data).rj; j < (*data).n; ++j, ++jj)
+				(*data).result->data[ii*(*data).matr_size + jj] += b[i*(*data).n + j];
+
+		delete[] b;
 	}
 }
 
@@ -73,7 +68,7 @@ void writing_result_matrix(const std::string & fname, const size_t& matr_size, c
 }
 
 void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const size_t& num_threads,
-	cpc_elm matr_a, cpc_elm matr_b, buff * const result_matr)
+	cpc_elm matr_a, cpc_elm matr_b, mut_matr * const result_matr)
 {
 	std::vector<std::thread*> matr_threads;
 
@@ -90,8 +85,7 @@ void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const s
 			{
 				size_t  a_ind = i * matr_size + k;
 				size_t  b_ind = k * matr_size + j;
-				// если кол-во текущих потоков меньше максимального, то добавляем в вектор ещё один
-				// иначе, ждём завершения всех потоков, очищаем вектор и заполняем его заново 
+				// добавление данных в очередь
 				pool.push(new th_data(&matr_a[a_ind], &matr_b[b_ind], block_width, matr_size, result_matr, i, j));
 			}
 		}
