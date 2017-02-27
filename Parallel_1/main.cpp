@@ -1,17 +1,17 @@
 #include "matrix.h"
 #include "funcs.h"
 
-pc_elm siply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const int& matr_size)
+pc_elm siply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
 {
 	pc_elm test_matr = new elm[matr_size*matr_size];
-	for (int i = 0; i < matr_size*matr_size; ++i)
+	for (size_t i = 0; i < matr_size*matr_size; ++i)
 		test_matr[i] = 0;
 
-	for (int i = 0; i < matr_size; ++i)
+	for (size_t i = 0; i < matr_size; ++i)
 	{
-		for (int j = 0; j < matr_size; ++j)
+		for (size_t j = 0; j < matr_size; ++j)
 		{
-			for (int k = 0, el = i*matr_size + j; k < matr_size; ++k)
+			for (size_t k = 0, el = i*matr_size + j; k < matr_size; ++k)
 			{
 				test_matr[el] += matr_a[i*matr_size + k] * matr_b[k*matr_size + j];
 			}
@@ -20,10 +20,10 @@ pc_elm siply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const int& matr_size)
 	return test_matr;
 }
 
-elm test(cpc_elm matr_a, cpc_elm matr_b, const int& matr_size)
+elm test(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
 {
 	elm summ = 0;
-	for (int i = 0; i < matr_size * matr_size; ++i)
+	for (size_t i = 0; i < matr_size * matr_size; ++i)
 	{
 		summ += matr_a[i] - matr_b[i];
 	}
@@ -63,6 +63,12 @@ void main(int argc, char **argv)
 	// Вычисляем затраченное время
 	double time = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
+	// Выводим время и параметры программы на экран
+	printing_params_and_time(matr_size, num_blocks, num_threads, time);
+
+	// Запись результирующей матрицы в файл
+	writing_result_matrix(RESULT_MATR_NAME, matr_size, result_matr->data);
+
 	// Тестирование умножения
 	pc_elm test_matr = siply_mupliply(matr_a, matr_b, matr_size);
 
@@ -70,11 +76,6 @@ void main(int argc, char **argv)
 
 	std::cout << summ << '\n';
 
-	// Выводим время и параметры программы на экран
-	printing_params_and_time(matr_size, num_blocks, num_threads, time);
-
-	// Запись результирующей матрицы в файл
-	writing_result_matrix(RESULT_MATR_NAME, matr_size, result_matr->data);
 
 	delete[] test_matr;
 	delete matr_a;

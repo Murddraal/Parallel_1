@@ -1,30 +1,57 @@
 #include "funcs.h"
 
-void multiply_thread(cpc_elm matr_a, cpc_elm matr_b, const int &n, const int &matr_size, buff * const result, const int ri, const int rj)
+void multiply_thread(thread_pool* tp)
 {
-	int* b = new int[n*n];
-	for (int i = 0; i < n*n; ++i)
-		b[i] = 0;
-
-	for (int i = 0; i < n; ++i)
+	size_t t_time = 0;
+	while (true)
 	{
-		for (int j = 0; j < n; ++j)
+		bool is_empty = false;
+		auto data = new th_data();
 		{
-			for (int k = 0, el = i*n + j; k < n; ++k)
-			{
-				b[el] += matr_a[i*matr_size + k] * matr_b[k*matr_size + j];
-			}
+			std::lock_guard<std::mutex> lg(tp->tp_mutex);
+			is_empty = tp->is_empty();
+			if (!is_empty)
+				data = tp->pop();
 		}
+		
+		
+		if (is_empty)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			t_time += 10;
+		}
+		else
+		{
+			t_time = 0;
+
+			elm* b = new elm[(*data).n*(*data).n];
+			for (size_t i = 0; i < (*data).n*(*data).n; ++i)
+				b[i] = 0;
+
+			for (size_t i = 0; i < (*data).n; ++i)
+			{
+				for (size_t j = 0; j < (*data).n; ++j)
+				{
+					for (size_t k = 0, el = i*(*data).n + j; k < (*data).n; ++k)
+					{
+						b[el] += (*data).matr_a[i*(*data).matr_size + k] * (*data).matr_b[k*(*data).matr_size + j];
+					}
+				}
+			}
+			// блокирование мьютекса
+			std::lock_guard<std::mutex> l((*data).result->buff_mutex);
+			for (size_t i = 0, ii = (*data).ri; i < (*data).n; ++i, ++ii)
+				for (size_t j = 0, jj = (*data).rj; j < (*data).n; ++j, ++jj)
+					(*data).result->data[ii*(*data).matr_size + jj] += b[i*(*data).n + j];
+			delete[] b;
+		}
+		
+		if (t_time == 100)
+			return;
 	}
-	// блокирование мьютекса
-	std::lock_guard<std::mutex> l(result->buff_mutex);
-	for (int i = 0, ii = ri; i < n; ++i, ++ii)
-		for(int j = 0, jj = rj; j< n; ++j, ++jj)
-		result->data[ii*matr_size + jj] += b[i*n +j];
-	delete[] b;
 }
 
-void printing_params_and_time(const int& size, const int& blocks, const int& threads, const double& time)
+void printing_params_and_time(const size_t& size, const size_t& blocks, const size_t& threads, const double& time)
 {
 	std::cout << "Size of matrix: " << size << 'x' << size << "\n";
 	std::cout << "Number of blocks: " << blocks << 'x' << blocks << "\n";
@@ -32,12 +59,12 @@ void printing_params_and_time(const int& size, const int& blocks, const int& thr
 	std::cout << "Time: " << time << "\n";
 }
 
-void writing_result_matrix(const std::string & fname, const int& matr_size, cpc_elm matrix)
+void writing_result_matrix(const std::string & fname, const size_t& matr_size, cpc_elm matrix)
 {
 	std::ofstream fout(fname);
-	for (int i = 0; i < matr_size; ++i)
+	for (size_t i = 0; i < matr_size; ++i)
 	{
-		for (int j = 0, b = i*matr_size; j < matr_size; ++j)
+		for (size_t j = 0, b = i*matr_size; j < matr_size; ++j)
 		{
 			fout << matrix[b + j] << ' ';
 		}
@@ -45,44 +72,30 @@ void writing_result_matrix(const std::string & fname, const int& matr_size, cpc_
 	}
 }
 
-void killing_threads(std::vector<std::thread*> &threads)
-{
-	for each (auto thread in threads)
-	{
-		if(thread->joinable())
-			thread->join();
-	}
-	threads.clear();
-}
-
-void multiplying_matr(const int& matr_size, const int& num_blocks, const int& num_threads,
+void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const size_t& num_threads,
 	cpc_elm matr_a, cpc_elm matr_b, buff * const result_matr)
 {
 	std::vector<std::thread*> matr_threads;
 
-	const int block_width = int(matr_size / num_blocks);
+	const size_t block_width = size_t(matr_size / num_blocks);
+
+	thread_pool pool(num_threads);
 
 	// шаг цикла - ширина блока.
-	for (int i = 0, ib = 0; i < matr_size; i += block_width, ++ib)
+	for (size_t i = 0, ib = 0; i < matr_size; i += block_width, ++ib)
 	{
-		for (int j = 0, jb = 0; j < matr_size; j += block_width, ++jb)
+		for (size_t j = 0, jb = 0; j < matr_size; j += block_width, ++jb)
 		{
-			for (int k = 0; k < matr_size; k += block_width)
+			for (size_t k = 0; k < matr_size; k += block_width)
 			{
-				int  a_ind = i * matr_size + k;
-				int  b_ind = k * matr_size + j;
+				size_t  a_ind = i * matr_size + k;
+				size_t  b_ind = k * matr_size + j;
 				// если кол-во текущих потоков меньше максимального, то добавляем в вектор ещё один
 				// иначе, ждём завершения всех потоков, очищаем вектор и заполняем его заново 
-				if (num_threads > matr_threads.size())
-					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, matr_size, result_matr, i, j));
-				else
-				{
-					killing_threads(matr_threads);
-					matr_threads.push_back(new std::thread(multiply_thread, &matr_a[a_ind], &matr_b[b_ind], block_width, matr_size, result_matr, i, j));
-				}
+				pool.push(new th_data(&matr_a[a_ind], &matr_b[b_ind], block_width, matr_size, result_matr, i, j));
 			}
 		}
 	}
 
-	killing_threads(matr_threads);
+	pool.killing_threads();
 }
