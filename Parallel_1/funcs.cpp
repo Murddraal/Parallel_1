@@ -2,13 +2,11 @@
 
 void multiply_thread(thread_pool* tp)
 {
-	//ожидание необходимо для того, чтобы поток не зовершился до начала подачи данных в очередь
-	std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
 	while (true)
 	{
 		bool is_empty = false;
 		auto data = new th_data();
+
 		//проверка очереди на пустоту и взятие данных
 		{
 			std::lock_guard<std::mutex> lg(tp->tp_mutex);
@@ -93,3 +91,32 @@ void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const s
 
 	pool.killing_threads();
 }
+
+pc_elm simply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
+{
+	pc_elm test_matr = new elm[matr_size*matr_size];
+	for (size_t i = 0; i < matr_size*matr_size; ++i)
+		test_matr[i] = 0;
+
+	for (size_t i = 0; i < matr_size; ++i)
+	{
+		for (size_t j = 0; j < matr_size; ++j)
+		{
+			for (size_t k = 0, el = i*matr_size + j; k < matr_size; ++k)
+			{
+				test_matr[el] += matr_a[i*matr_size + k] * matr_b[k*matr_size + j];
+			}
+		}
+	}
+	return test_matr;
+}
+
+elm test(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)
+{
+	elm summ = 0;
+	for (size_t i = 0; i < matr_size * matr_size; ++i)
+		summ += matr_a[i] - matr_b[i];
+
+	return summ;
+}
+

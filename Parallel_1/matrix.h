@@ -19,8 +19,7 @@ typedef elm * const pc_elm;
 // структура данных, в которую различные потоки могут складывать информацию
 class mut_matr
 {
-private:
-	
+private:	
 public:
 	std::mutex mtx;
 	pc_elm data;
@@ -60,6 +59,7 @@ private:
 	std::queue<th_data*> data_queue;
 	// вектор потоков
 	std::vector<std::thread*> multiply;
+	size_t threads_amount;
 
 public:
 	void push(th_data*);

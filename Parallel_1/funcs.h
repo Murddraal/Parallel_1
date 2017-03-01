@@ -20,3 +20,9 @@ void writing_result_matrix(const std::string &, const size_t&, cpc_elm);
 // умножение матриц с делением на блоки и потоки
 void multiplying_matr(const size_t&, const size_t&, const size_t&,
 	cpc_elm, cpc_elm, mut_matr * const);
+
+// тестирование матриц на идентичность
+elm test(cpc_elm, cpc_elm, const size_t&);
+
+//умножение двух матриц влоб
+pc_elm simply_mupliply(cpc_elm, cpc_elm, const size_t&);

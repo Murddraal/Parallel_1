@@ -60,6 +60,8 @@ th_data::th_data(cpc_elm matr_a_, cpc_elm matr_b_,
 void thread_pool::push(th_data* data)
 {
 	data_queue.push(data);
+	if(multiply.size() < threads_amount)
+		multiply.push_back(new std::thread(multiply_thread, this));
 }
 
 th_data* thread_pool::pop()
@@ -76,8 +78,9 @@ bool thread_pool::is_empty()
 
 thread_pool::thread_pool(size_t num_threads)
 {
-	for (size_t i = 0; i < num_threads; ++i)
-		multiply.push_back(new std::thread(multiply_thread, this));
+	/*for (size_t i = 0; i < num_threads; ++i)
+		multiply.push_back(new std::thread(multiply_thread, this));*/
+	threads_amount = num_threads;
 }
 
 void thread_pool::killing_threads()
