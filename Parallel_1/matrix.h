@@ -60,6 +60,7 @@ private:
 	// вектор потоков
 	std::vector<std::thread*> multiply;
 	size_t threads_amount;
+	bool is_done = false;
 
 public:
 	void push(th_data*);
@@ -67,9 +68,11 @@ public:
 	bool is_empty();
 	thread_pool(size_t);
 	thread_pool() = delete;
+	~thread_pool();
 	void killing_threads();
 
 	std::mutex tp_mutex;
+	std::condition_variable cond_var;
 
 };
 

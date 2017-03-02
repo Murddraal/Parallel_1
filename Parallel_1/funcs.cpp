@@ -4,19 +4,19 @@ void multiply_thread(thread_pool* tp)
 {
 	while (true)
 	{
-		bool is_empty = false;
 		auto data = new th_data();
 
-		//проверка очереди на пустоту и взятие данных
 		{
-			std::lock_guard<std::mutex> lg(tp->tp_mutex);
+			std::unique_lock<std::mutex> lock(tp->tp_mutex);
+			while (tp->is_empty())
+			{
+				tp->cond_var.wait(lock);
+			}
+			data = tp->pop();
+		}		
 
-			is_empty = tp->is_empty();
-			if (is_empty)
-				return;
-			else
-				data = tp->pop();
-		}
+		if (data->matr_size == 0)
+			return;
 
 		// умножение блоков
 		auto b = new elm[(*data).n*(*data).n];
@@ -72,6 +72,8 @@ void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const s
 
 	const size_t block_width = size_t(matr_size / num_blocks);
 
+	std::clock_t start = std::clock();
+
 	thread_pool pool(num_threads);
 
 	// шаг цикла - ширина блока.
@@ -90,6 +92,20 @@ void multiplying_matr(const size_t& matr_size, const size_t& num_blocks, const s
 	}
 
 	pool.killing_threads();
+	// Вычисляем затраченное время
+	double time = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+	// Выводим время и параметры программы на экран
+	printing_params_and_time(matr_size, num_blocks, num_threads, time);
+
+	// Запись результирующей матрицы в файл
+	writing_result_matrix(RESULT_MATR_NAME, matr_size, result_matr->data);
+
+	// Тестирование умножения
+	pc_elm test_matr = simply_mupliply(matr_a, matr_b, matr_size);
+
+	auto summ = test(test_matr, result_matr->data, matr_size);
+
+	std::cout << "Test: " << summ << '\n';
 }
 
 pc_elm simply_mupliply(cpc_elm matr_a, cpc_elm matr_b, const size_t& matr_size)

@@ -49,8 +49,8 @@ void main(int argc, char **argv)
 
 
 	delete[] test_matr;
-	delete matr_a;
-	delete matr_b;
+	delete[] matr_a;
+	delete[] matr_b;
 	
 }
 

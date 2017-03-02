@@ -60,12 +60,18 @@ th_data::th_data(cpc_elm matr_a_, cpc_elm matr_b_,
 void thread_pool::push(th_data* data)
 {
 	data_queue.push(data);
-	if(multiply.size() < threads_amount)
-		multiply.push_back(new std::thread(multiply_thread, this));
+	/*if(multiply.size() < threads_amount)
+		multiply.push_back(new std::thread(multiply_thread, this));*/
+	cond_var.notify_one();
 }
 
 th_data* thread_pool::pop()
 {
+	if (data_queue.size() == 0)
+	{
+		std::cout << "Attention! queue error\n";
+		return new th_data();
+	}
 	auto p = data_queue.front();
 	data_queue.pop();
 	return p;
@@ -78,19 +84,30 @@ bool thread_pool::is_empty()
 
 thread_pool::thread_pool(size_t num_threads)
 {
-	/*for (size_t i = 0; i < num_threads; ++i)
-		multiply.push_back(new std::thread(multiply_thread, this));*/
+	for (size_t i = 0; i < num_threads; ++i)
+	{
+		multiply.push_back(new std::thread(multiply_thread, this));
+		//multiply[i]->detach();
+	}
 	threads_amount = num_threads;
 }
 
 void thread_pool::killing_threads()
 {
+	for (int i = 0; i < threads_amount; ++i)
+		this->push(new th_data());
 	for each (auto thread in multiply)
 	{
 		if (thread->joinable())
 			thread->join();
 	}
 	multiply.clear();
+	//std::this_thread::sleep_for(std::chrono::seconds(60));
+
+}
+
+thread_pool::~thread_pool()
+{
 }
 
 th_data::th_data():matr_a(new elm), matr_b(new elm), n(0), matr_size(0), result(new mut_matr(0)), ri(0), rj(0)
