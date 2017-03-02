@@ -1,6 +1,27 @@
 #include "matrix.h"
 #include "funcs.h"
 
+void printing_params_and_time(const size_t& size, const size_t& blocks, const size_t& threads, const double& time)
+{
+	std::cout << "Size of matrix: " << size << 'x' << size << "\n";
+	std::cout << "Number of blocks: " << blocks << 'x' << blocks << "\n";
+	std::cout << "Number of threads: " << threads << "\n";
+	std::cout << "Time: " << time << "\n";
+}
+
+void writing_result_matrix(const std::string & fname, const size_t& matr_size, cpc_elm matrix)
+{
+	std::ofstream fout(fname);
+	for (size_t i = 0; i < matr_size; ++i)
+	{
+		for (size_t j = 0, b = i*matr_size; j < matr_size; ++j)
+		{
+			fout << matrix[b + j] << ' ';
+		}
+		fout << '\n';
+	}
+}
+
 elm* reading_matrix(const std::string &filename)
 {
 	std::ifstream fin(filename);
@@ -56,42 +77,6 @@ th_data::th_data(cpc_elm matr_a_, cpc_elm matr_b_,
 	const size_t ri_,
 	const size_t rj_) :matr_a(matr_a_), matr_b(matr_b_), n(n_), matr_size(matr_size_), result(result_), ri(ri_), rj(rj_)
 {};
-
-void thread_pool::push(th_data* data)
-{
-	data_queue.push(data);
-	if(multiply.size() < threads_amount)
-		multiply.push_back(new std::thread(multiply_thread, this));
-}
-
-th_data* thread_pool::pop()
-{
-	auto p = data_queue.front();
-	data_queue.pop();
-	return p;
-}
-
-bool thread_pool::is_empty()
-{
-	return data_queue.empty();
-}
-
-thread_pool::thread_pool(size_t num_threads)
-{
-	/*for (size_t i = 0; i < num_threads; ++i)
-		multiply.push_back(new std::thread(multiply_thread, this));*/
-	threads_amount = num_threads;
-}
-
-void thread_pool::killing_threads()
-{
-	for each (auto thread in multiply)
-	{
-		if (thread->joinable())
-			thread->join();
-	}
-	multiply.clear();
-}
 
 th_data::th_data():matr_a(new elm), matr_b(new elm), n(0), matr_size(0), result(new mut_matr(0)), ri(0), rj(0)
 {};

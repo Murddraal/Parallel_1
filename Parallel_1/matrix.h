@@ -51,30 +51,12 @@ struct th_data
 	th_data();
 };
 
-// пул потоков
-class thread_pool
-{
-private:
-	// очередь с данными, которые считывают потоки для умножения матриц(указатели на начала блоков и их размеры)
-	std::queue<th_data*> data_queue;
-	// вектор потоков
-	std::vector<std::thread*> multiply;
-	size_t threads_amount;
-
-public:
-	void push(th_data*);
-	th_data* pop();
-	bool is_empty();
-	thread_pool(size_t);
-	thread_pool() = delete;
-	void killing_threads();
-
-	std::mutex tp_mutex;
-
-};
-
 // чтение матрицы из файла
 elm* reading_matrix(const std::string &);
 
 // запись матрицы в файл
 void write_matrix(size_t);
+
+void printing_params_and_time(const size_t& size, const size_t& blocks, const size_t& threads, const double& time);
+
+void writing_result_matrix(const std::string & fname, const size_t& matr_size, cpc_elm matrix);

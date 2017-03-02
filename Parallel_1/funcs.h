@@ -8,9 +8,6 @@ const size_t MATR_SIZE = 200;
 const size_t NUM_THREADS = 1;
 const size_t NUM_BLOCKS = 5;
 
-// уможает два блока матриц
-void multiply_thread(thread_pool*);
-
 // выводит в консоль параметры, с которой была запущено программа, и время её выполненя
 void printing_params_and_time(const size_t&, const size_t&, const size_t&, const double&);
 
